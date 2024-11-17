@@ -128,3 +128,39 @@ export class Scope extends TrimlNode {
         return jsonNode;
     }
 }
+
+export class Shape extends TrimlNode {
+    name?: string;
+    type?: string;
+    label?: string;
+    source?: string;
+    data?: string;
+
+    toJsonNode(): TrimlJsonNode {
+        const jsonNode = trimlToJsonNode(this);
+        jsonNode.nodeType = "shape";
+
+        if (this.name) jsonNode.properties?.push(new TrimlJsonProperty("name", this.name));
+        if (this.type) jsonNode.properties?.push(new TrimlJsonProperty("type", this.type));
+        if (this.label) jsonNode.properties?.push(new TrimlJsonProperty("label", this.label));
+        if (this.source) jsonNode.properties?.push(new TrimlJsonProperty("source", this.source));
+        if (this.data) jsonNode.properties?.push(new TrimlJsonProperty("data", this.data));
+
+        return jsonNode;
+    }
+}
+
+export class Group extends TrimlNode {
+    name?: string;
+    condition?: string;
+
+    toJsonNode(): TrimlJsonNode {
+        const jsonNode = trimlToJsonNode(this);
+        jsonNode.nodeType = "group";
+
+        if (this.name) jsonNode.properties?.push(new TrimlJsonProperty("name", this.name));
+        if (this.condition) jsonNode.properties?.push(new TrimlJsonProperty("condition", this.condition));
+
+        return jsonNode;
+    }
+}
