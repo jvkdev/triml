@@ -19,6 +19,8 @@ export function trimlToJsonNode(trimlNode: triml.TrimlNode) {
 
     if (trimlNode.name) jsonNode.properties?.push(new TrimlJsonProperty("name", trimlNode.name));
     if (trimlNode.label) jsonNode.properties?.push(new TrimlJsonProperty("label", trimlNode.label));
+    if (trimlNode.condition) jsonNode.properties?.push(new TrimlJsonProperty("condition", trimlNode.condition));
+    if (trimlNode.source) jsonNode.properties?.push(new TrimlJsonProperty("source", trimlNode.source));
 
     trimlNode.childNodes.forEach((childNode) => {
         const jsonChild = childNode.toJsonNode();
