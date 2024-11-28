@@ -3,7 +3,7 @@ import * as triml from "./TrimlNode";
 export class TrimlJsonNode implements TrimlJsonNode {
     nodeType?: string;
     properties?: TrimlJsonProperty[] = [];
-    childNodes?: TrimlJsonNode[] = [];
+    nodes?: TrimlJsonNode[] = [];
 }
 export class TrimlJsonProperty implements TrimlJsonProperty {
     name?: string;
@@ -17,16 +17,28 @@ export class TrimlJsonProperty implements TrimlJsonProperty {
 export function trimlToJsonNode(trimlNode: triml.TrimlNode) {
     const jsonNode = new TrimlJsonNode();
 
+    if (trimlNode instanceof triml.Model) { jsonNode.nodeType = "model"; }
+    else if (trimlNode instanceof triml.Input) { jsonNode.nodeType = "input"; }
+    else if (trimlNode instanceof triml.Option) { jsonNode.nodeType = "option"; }
+    else if (trimlNode instanceof triml.Graphic) { jsonNode.nodeType = "graphic"; }
+    else if (trimlNode instanceof triml.Data) { jsonNode.nodeType = "data"; }
+    else { jsonNode.nodeType = "node"; }
+
+    if (trimlNode.type) jsonNode.properties?.push(new TrimlJsonProperty("type", trimlNode.type));
     if (trimlNode.name) jsonNode.properties?.push(new TrimlJsonProperty("name", trimlNode.name));
-    if (trimlNode.label) jsonNode.properties?.push(new TrimlJsonProperty("label", trimlNode.label));
     if (trimlNode.condition) jsonNode.properties?.push(new TrimlJsonProperty("condition", trimlNode.condition));
     if (trimlNode.source) jsonNode.properties?.push(new TrimlJsonProperty("source", trimlNode.source));
+    if (trimlNode.format) jsonNode.properties?.push(new TrimlJsonProperty("format", trimlNode.format));
+    if (trimlNode.value) jsonNode.properties?.push(new TrimlJsonProperty("value", trimlNode.value));
 
-    trimlNode.childNodes.forEach((childNode) => {
+    if (trimlNode instanceof triml.Graphic) {
+        if (trimlNode.style) jsonNode.properties?.push(new TrimlJsonProperty("style", trimlNode.style));
+    }
+
+    trimlNode.nodes.forEach((childNode) => {
         const jsonChild = childNode.toJsonNode();
-        //console.log("trimlChild: ", jsonChild);
         if (jsonChild) {
-            jsonNode.childNodes?.push(jsonChild);
+            jsonNode.nodes?.push(jsonChild);
         }
     });
 
@@ -41,7 +53,6 @@ export function trimlFromJsonNode(jsonNode: TrimlJsonNode, parentNode: triml.Tri
     // console.log(cJsonNode, ", parent: ", parentNode);
 
     switch (jsonNode.nodeType) {
-        default:
         case "model":
             trimlNode = new triml.Model(parentNode);
             break;
@@ -51,14 +62,14 @@ export function trimlFromJsonNode(jsonNode: TrimlJsonNode, parentNode: triml.Tri
         case "option":
             trimlNode = new triml.Option(parentNode);
             break;
-        case "scope":
-            trimlNode = new triml.Scope(parentNode);
+        case "graphic":
+            trimlNode = new triml.Graphic(parentNode);
             break;
-        case "group":
-            trimlNode = new triml.Group(parentNode);
+        case "data":
+            trimlNode = new triml.Data(parentNode);
             break;
-        case "shape":
-            trimlNode = new triml.Shape(parentNode);
+        default:
+            trimlNode = new triml.Node(parentNode);
             break;
     }
 
@@ -70,10 +81,10 @@ export function trimlFromJsonNode(jsonNode: TrimlJsonNode, parentNode: triml.Tri
         }
     });
 
-    jsonNode.childNodes?.forEach((jsonChild) => {
+    jsonNode.nodes?.forEach((jsonChild) => {
         const trimlChild = trimlFromJsonNode(jsonChild, trimlNode);
         if (trimlChild) {
-            trimlNode.childNodes.push(trimlChild);
+            trimlNode.nodes.push(trimlChild);
         }
     });
 

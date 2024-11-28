@@ -3,41 +3,43 @@ import { TrimlJsonNode, TrimlJsonProperty, trimlToJsonNode } from "./TrimlJson";
 
 export class TrimlNode {
     instanceId: string = crypto.randomUUID();
-    parentNode: TrimlNode | null;
-    childNodes: TrimlNode[] = [];
+    parent: TrimlNode | null;
+    nodes: TrimlNode[] = [];
 
-    name?: string;
-    label?: string | null;
+    type?: string | null;
+    name?: string | null;
     condition?: string | null;
     source?: string | null;
+    format?: string | null;
+    value?: string | null;
 
     constructor(parentNode: TrimlNode | null) {
-        this.parentNode = parentNode;
+        this.parent = parentNode;
     }
 
-    public addChild(child: TrimlNode) {
-        this.childNodes.push(child);
-        child.parentNode = this;
+    public add(node: TrimlNode) {
+        this.nodes.push(node);
+        node.parent = this;
     }
 
     public removeFromParent() {
-        if (this.parentNode) {
-            const index = this.parentNode?.childNodes.indexOf(this) ?? -1;
+        if (this.parent) {
+            const index = this.parent?.nodes.indexOf(this) ?? -1;
             if (index > 0) {
-                this.parentNode?.childNodes.splice(index, 1);
+                this.parent?.nodes.splice(index, 1);
             }
         }
     }
 
     public putBeforeOnParent(node: TrimlNode) {
-        if (this.parentNode && node.hasSameParent(this) && this.isAddedToParent()) {
+        if (this.parent && node.hasSameParent(this) && this.isAddedToParent()) {
             node.removeFromParent();
-            this.parentNode?.childNodes.splice(this.parentNode.childNodes.indexOf(this), 0, node);
+            this.parent?.nodes.splice(this.parent.nodes.indexOf(this), 0, node);
         }
     }
 
     public isAddedToParent(): boolean {
-        if (this.parentNode?.childNodes.includes(this)) {
+        if (this.parent?.nodes.includes(this)) {
             return true;
         } else {
             return false;
@@ -45,7 +47,7 @@ export class TrimlNode {
     }
 
     public hasSameParent(node: TrimlNode): boolean {
-        if (node.parentNode === this.parentNode) {
+        if (node.parent === this.parent) {
             return true;
         } else {
             return false;
@@ -56,10 +58,10 @@ export class TrimlNode {
         if (visited.has(node)) { return false; }
         visited.add(node);
 
-        if (node?.childNodes.includes(this)) { return true; }
+        if (node?.nodes.includes(this)) { return true; }
         else {
-            node?.childNodes.forEach((child) => {
-                if (node.isDescendentOf(child, visited)) { return true; }
+            node?.nodes.forEach((node) => {
+                if (node.isDescendentOf(node, visited)) { return true; }
             });
         }
         return false;
@@ -70,87 +72,32 @@ export class TrimlNode {
     }
 }
 
+export class Node extends TrimlNode {
 
+}
 
 export class Model extends TrimlNode {
-    toJsonNode(): TrimlJsonNode {
-        const jsonNode = trimlToJsonNode(this);
-        jsonNode.nodeType = "model";
 
-        return jsonNode;
-    }
 }
 
 export class Input extends TrimlNode {
-    defaultOption?: string;
-
-    constructor(parentNode: TrimlNode | null, name?: string, options?: string[]) {
+    constructor(parentNode: TrimlNode | null, name?: string) {
         super(parentNode);
         this.name = name;
-        options?.forEach((optionValue) => {
-            this.childNodes.push(new Option(this, optionValue));
-        });
-    }
-
-    toJsonNode(): TrimlJsonNode {
-        const jsonNode = trimlToJsonNode(this);
-        jsonNode.nodeType = "input";
-
-        return jsonNode;
     }
 }
 
 export class Option extends TrimlNode {
-    value?: string;
-
     constructor(parentNode: TrimlNode | null, value?: string) {
         super(parentNode);
         this.value = value;
     }
-
-    toJsonNode(): TrimlJsonNode {
-        const jsonNode = trimlToJsonNode(this);
-        jsonNode.nodeType = "option";
-
-        if (this.value) jsonNode.properties?.push(new TrimlJsonProperty("value", this.value));
-
-        return jsonNode;
-    }
 }
 
-export class Scope extends TrimlNode {
-    toJsonNode(): TrimlJsonNode {
-        const jsonNode = trimlToJsonNode(this);
-        jsonNode.nodeType = "scope";
-
-        return jsonNode;
-    }
+export class Graphic extends TrimlNode {
+    style?: string | null;
 }
 
-export class Shape extends TrimlNode {
-    name?: string;
-    type?: string;
-    label?: string;
-    source?: string;
-    data?: string;
+export class Data extends TrimlNode {
 
-    toJsonNode(): TrimlJsonNode {
-        const jsonNode = trimlToJsonNode(this);
-        jsonNode.nodeType = "shape";
-
-        if (this.type) jsonNode.properties?.push(new TrimlJsonProperty("type", this.type));
-        if (this.data) jsonNode.properties?.push(new TrimlJsonProperty("data", this.data));
-
-        return jsonNode;
-    }
-}
-
-export class Group extends TrimlNode {
-
-    toJsonNode(): TrimlJsonNode {
-        const jsonNode = trimlToJsonNode(this);
-        jsonNode.nodeType = "group";
-
-        return jsonNode;
-    }
 }
